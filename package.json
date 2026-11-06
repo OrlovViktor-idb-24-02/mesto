@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "vite build",
+    "build:public": "vite build --mode public",
     "preview": "vite preview --host 127.0.0.1",
     "check": "node --check src/scripts/index.js && node --check src/scripts/components/api.js && node --check src/scripts/components/card.js && node --check src/scripts/components/modal.js && node --check src/scripts/components/validation.js",
     "deploy": "gh workflow run deploy.yml"

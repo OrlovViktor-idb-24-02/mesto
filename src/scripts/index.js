@@ -5,7 +5,7 @@ import '@fontsource/inter/latin-400.css';
 import '@fontsource/inter/latin-500.css';
 import '@fontsource/inter/latin-900.css';
 import '../styles/index.css';
-import { getUserInfo, getCardList, setUserInfo, setUserAvatar, addCard, deleteCard, changeLikeCardStatus } from './components/api.js';
+import { getUserInfo, getCardList, setUserInfo, setUserAvatar, addCard, deleteCard, changeLikeCardStatus, hasApiConfig, getApiCohort, setApiCredentials } from './components/api.js';
 import { createCard, isCardLiked, updateCardLikes, removeCardElement, showCardError } from './components/card.js';
 import { openModalWindow, closeModalWindow, enableModalClosing } from './components/modal.js';
 import { enableValidation, clearValidation, updateSubmitButton } from './components/validation.js';
@@ -16,6 +16,9 @@ const profileAvatar = document.querySelector('.profile__avatar');
 const list = document.querySelector('.places__list');
 const status = document.querySelector('.page__status');
 const retry = document.querySelector('.page__retry');
+const connectButton = document.querySelector('.page__connect');
+const connectPopup = document.querySelector('.popup_type_connection');
+const connectForm = document.forms.connection;
 const editPopup = document.querySelector('.popup_type_edit');
 const avatarPopup = document.querySelector('.popup_type_avatar');
 const newCardPopup = document.querySelector('.popup_type_new-card');
@@ -230,15 +233,39 @@ const loadPage = () => {
       document.querySelectorAll('.profile button').forEach((button) => { button.disabled = false; });
       status.textContent = cards.length ? '' : 'Пока нет фотографий. Добавьте первое место.';
       status.hidden = cards.length > 0;
+      connectButton.hidden = true;
     })
     .catch((error) => {
       status.textContent = reportError(error);
       retry.hidden = false;
+      connectButton.hidden = false;
     })
     .finally(() => { loading = false; });
 };
 
 retry.addEventListener('click', loadPage);
+connectButton.addEventListener('click', () => {
+  connectForm.elements.cohort.value = getApiCohort();
+  connectForm.elements.token.value = '';
+  clearValidation(connectForm);
+  openModalWindow(connectPopup);
+});
+connectForm.addEventListener('submit', (event) => {
+  event.preventDefault();
+  if (!connectForm.checkValidity() || loading) return;
+  setApiCredentials({
+    cohort: connectForm.elements.cohort.value,
+    token: connectForm.elements.token.value,
+  });
+  connectForm.reset();
+  closeModalWindow(connectPopup);
+  loadPage();
+});
 enableValidation();
 enableModalClosing();
-loadPage();
+if (hasApiConfig()) {
+  loadPage();
+} else {
+  status.textContent = 'Подключите свой аккаунт Mesto, чтобы увидеть профиль и фотографии.';
+  connectButton.hidden = false;
+}

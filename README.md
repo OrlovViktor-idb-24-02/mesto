@@ -2,6 +2,10 @@
 
 Адаптивная страница для обмена фотографиями. Проект создан на JavaScript и Vite по заданию «Mesto. Работа с сервером», заключительное задание — вариант 1.
 
+**Опубликованный проект:** [Mesto на GitHub Pages](https://orlovviktor-idb-24-02.github.io/mesto-pages/).
+
+**Исходники:** [OrlovViktor-idb-24-02/mesto](https://github.com/OrlovViktor-idb-24-02/mesto).
+
 ## Возможности
 
 - Профиль и карточки загружаются с API через `Promise.all`.
@@ -23,7 +27,7 @@ npm ci
 npm run dev
 ```
 
-В предоставленной локальной копии `.env` уже настроен. При новом клонировании скопируйте `.env.example` в `.env` и заполните значения:
+При новом клонировании скопируйте `.env.example` в `.env` и заполните значения:
 
 ```dotenv
 VITE_MESTO_TOKEN=ваш_токен_Mesto
@@ -54,31 +58,22 @@ src/scripts/components/card.js    создание и обновление ка�
 src/scripts/components/modal.js   открытие, закрытие и управление фокусом
 src/scripts/components/validation.js  проверка форм
 src/styles/index.css              стили и адаптивная вёрстка
-.github/workflows/deploy.yml      публикация сборки в отдельный репозиторий
+.github/workflows/deploy.yml      сборка и автоматическая публикация GitHub Pages
 ```
 
 ## Публикация на GitHub Pages
 
-Workflow настроен на публикацию только содержимого `dist/` из приватного репозитория исходников в отдельный публичный репозиторий. Чтобы включить публикацию:
+Автоматическая публикация настраивается в репозитории `mesto`: **Settings → Pages → Source → GitHub Actions**. Workflow проверяет код, собирает публичную версию без токена и публикует артефакт при каждом push в `main`. Он использует встроенный краткосрочный `GITHUB_TOKEN`; отдельный Personal Access Token не нужен. Адрес этой публикации: `https://orlovviktor-idb-24-02.github.io/mesto/`.
 
-1. Разместите исходники в приватном репозитории с основной веткой `main`.
-2. Создайте пустой публичный репозиторий для сборки, например `mesto-production`.
-3. Добавьте в **приватный** репозиторий секреты Actions:
-   - `PUBLIC_PAGES_TOKEN` — GitHub-токен с правом записи в репозиторий сборки;
-   - `PUBLIC_PAGES_REPO` — `владелец/mesto-production`;
-   - необязательно `PUBLIC_PAGES_BRANCH` — ветка сборки, по умолчанию `main`.
-4. Сделайте push в `main`. Дождитесь завершения workflow.
-5. В публичном репозитории выберите **Settings → Pages → Deploy from a branch → main → / (root)**.
-
-Повторная публикация запускается автоматически при push в `main`. Вручную её можно запустить в **Actions → Deploy to Public Pages Repository → Run workflow**, либо, если установлен и авторизован GitHub CLI, командой:
+Отдельный репозиторий `mesto-pages` содержит только готовую сборку. Его можно обновить локальной командой:
 
 ```sh
 npm run deploy
 ```
 
-**Опубликованный проект:** ссылка появится после подключения GitHub и успешной публикации. Адрес пока не создан.
+Команда `npm run deploy` собирает публичную версию и отправляет содержимое `dist/` в ветку `main` репозитория `mesto-pages` через библиотеку `gh-pages`. Для неё Git на компьютере должен быть авторизован в аккаунте владельца репозитория. В `mesto-pages` выбрано **Settings → Pages → Deploy from a branch → main → / (root)**.
 
-Без секретов публикации workflow всё равно проверяет код и сохраняет публичную сборку как артефакт `mesto-public-build`. Шаг отправки в публичный репозиторий выполняется только после настройки `PUBLIC_PAGES_TOKEN` и `PUBLIC_PAGES_REPO`.
+Автоматический workflow также можно запустить вручную через **Actions → Deploy Mesto to GitHub Pages → Run workflow**.
 
 ## Макет
 

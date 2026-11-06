@@ -8,7 +8,18 @@ import '../styles/index.css';
 import { getUserInfo, getCardList, setUserInfo, setUserAvatar, addCard, deleteCard, changeLikeCardStatus, hasApiConfig, getApiCohort, setApiCredentials } from './components/api.js';
 import { createCard, isCardLiked, updateCardLikes, removeCardElement, showCardError } from './components/card.js';
 import { openModalWindow, closeModalWindow, enableModalClosing } from './components/modal.js';
-import { enableValidation, clearValidation, updateSubmitButton } from './components/validation.js';
+import { enableValidation, clearValidation } from './components/validation.js';
+
+const validationSettings = {
+  formSelector: '.popup__form',
+  inputSelector: '.popup__input',
+  submitButtonSelector: '.popup__button',
+  errorSelector: '.popup__input-error',
+  serverErrorSelector: '.popup__error',
+  inactiveButtonClass: 'popup__button_disabled',
+  inputErrorClass: 'popup__input_type_error',
+  errorClass: 'popup__input-error_active',
+};
 
 const profileTitle = document.querySelector('.profile__title');
 const profileDescription = document.querySelector('.profile__description');
@@ -75,7 +86,7 @@ const handleLikeClick = (cardId, element) => {
 const handleDeleteClick = (cardId, element) => {
   if (deleteForm.dataset.submitting === 'true') return;
   pendingDelete = { cardId, element };
-  clearValidation(deleteForm);
+  deleteForm.querySelector('.popup__error').textContent = '';
   openModalWindow(deletePopup);
 };
 
@@ -147,6 +158,7 @@ const submitForm = (form, popup, loadingText, action) => {
   form.querySelector('.popup__error').textContent = '';
   button.textContent = loadingText;
   button.disabled = true;
+  button.classList.add(validationSettings.inactiveButtonClass);
   form.querySelectorAll('input').forEach((input) => { input.disabled = true; });
   Promise.resolve().then(action)
     .then(() => closeModalWindow(popup))
@@ -155,7 +167,8 @@ const submitForm = (form, popup, loadingText, action) => {
       form.dataset.submitting = 'false';
       form.querySelectorAll('input').forEach((input) => { input.disabled = false; });
       button.textContent = defaultText;
-      updateSubmitButton(form);
+      button.disabled = !form.checkValidity();
+      button.classList.toggle(validationSettings.inactiveButtonClass, button.disabled);
     });
 };
 
@@ -201,21 +214,21 @@ document.querySelector('.profile__edit-button').addEventListener('click', () => 
   if (profileForm.dataset.submitting === 'true') return;
   profileForm.elements.name.value = currentUser.name;
   profileForm.elements.about.value = currentUser.about;
-  clearValidation(profileForm);
+  clearValidation(profileForm, validationSettings);
   openModalWindow(editPopup);
 });
 
 document.querySelector('.profile__avatar-button').addEventListener('click', () => {
   if (avatarForm.dataset.submitting === 'true') return;
   avatarForm.reset();
-  clearValidation(avatarForm);
+  clearValidation(avatarForm, validationSettings);
   openModalWindow(avatarPopup);
 });
 
 document.querySelector('.profile__add-button').addEventListener('click', () => {
   if (cardForm.dataset.submitting === 'true') return;
   cardForm.reset();
-  clearValidation(cardForm);
+  clearValidation(cardForm, validationSettings);
   openModalWindow(newCardPopup);
 });
 
@@ -247,7 +260,7 @@ retry.addEventListener('click', loadPage);
 connectButton.addEventListener('click', () => {
   connectForm.elements.cohort.value = getApiCohort();
   connectForm.elements.token.value = '';
-  clearValidation(connectForm);
+  clearValidation(connectForm, validationSettings);
   openModalWindow(connectPopup);
 });
 connectForm.addEventListener('submit', (event) => {
@@ -261,7 +274,7 @@ connectForm.addEventListener('submit', (event) => {
   closeModalWindow(connectPopup);
   loadPage();
 });
-enableValidation();
+enableValidation(validationSettings);
 enableModalClosing();
 if (hasApiConfig()) {
   loadPage();

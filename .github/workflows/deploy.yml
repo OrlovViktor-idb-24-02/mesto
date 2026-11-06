@@ -1,4 +1,4 @@
-name: Deploy to Public Pages Repository
+name: Deploy Mesto to GitHub Pages
 
 on:
   push:
@@ -9,17 +9,14 @@ permissions:
   contents: read
 
 concurrency:
-  group: public-pages-deploy
+  group: github-pages
   cancel-in-progress: false
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
-    env:
-      PUBLIC_PAGES_TOKEN: ${{ secrets.PUBLIC_PAGES_TOKEN }}
-      PUBLIC_PAGES_REPO: ${{ secrets.PUBLIC_PAGES_REPO }}
     steps:
-      - name: Checkout private source repository
+      - name: Checkout source repository
         uses: actions/checkout@v4
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -32,23 +29,21 @@ jobs:
         run: |
           npm run check
           npm run build:public
-      - name: Save built site
-        uses: actions/upload-artifact@v4
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v4
         with:
-          name: mesto-public-build
           path: dist
-      - name: Deploy built files to public repository
-        if: ${{ env.PUBLIC_PAGES_TOKEN != '' && env.PUBLIC_PAGES_REPO != '' }}
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          personal_token: ${{ secrets.PUBLIC_PAGES_TOKEN }}
-          external_repository: ${{ secrets.PUBLIC_PAGES_REPO }}
-          publish_dir: ./dist
-          publish_branch: ${{ secrets.PUBLIC_PAGES_BRANCH || 'main' }}
-          force_orphan: true
-          user_name: 'OrlovViktor-idb-24-02'
-          user_email: '242589486+OrlovViktor-idb-24-02@users.noreply.github.com'
-          commit_message: 'deploy: update build'
-      - name: Report deployment setup
-        if: ${{ env.PUBLIC_PAGES_TOKEN == '' || env.PUBLIC_PAGES_REPO == '' }}
-        run: echo '::notice::Build saved as artifact. Configure PUBLIC_PAGES_TOKEN and PUBLIC_PAGES_REPO to enable automatic publication.'
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

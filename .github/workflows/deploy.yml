@@ -1,0 +1,47 @@
+name: Deploy to Public Pages Repository
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: public-pages-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout private source repository
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Check and build project
+        env:
+          VITE_MESTO_TOKEN: ${{ secrets.VITE_MESTO_TOKEN }}
+          VITE_MESTO_COHORT: ${{ secrets.VITE_MESTO_COHORT }}
+        run: |
+          test -n "$VITE_MESTO_TOKEN" || { echo 'Missing VITE_MESTO_TOKEN'; exit 1; }
+          test -n "$VITE_MESTO_COHORT" || { echo 'Missing VITE_MESTO_COHORT'; exit 1; }
+          npm run check
+          npm run build
+      - name: Deploy built files to public repository
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          personal_token: ${{ secrets.PUBLIC_PAGES_TOKEN }}
+          external_repository: ${{ secrets.PUBLIC_PAGES_REPO }}
+          publish_dir: ./dist
+          publish_branch: ${{ secrets.PUBLIC_PAGES_BRANCH || 'main' }}
+          force_orphan: true
+          user_name: 'OrlovViktor-idb-24-02'
+          user_email: '242589486+OrlovViktor-idb-24-02@users.noreply.github.com'
+          commit_message: 'deploy: update build'
